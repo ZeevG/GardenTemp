@@ -15,7 +15,8 @@ angular
     'ngResource',
     'ngRoute',
     'ngSanitize',
-    'ngTouch'
+    'ngTouch',
+    'googlechart'
   ])
   .config(function ($routeProvider) {
     $routeProvider
@@ -23,11 +24,13 @@ angular
         templateUrl: 'views/main.html',
         controller: 'MainCtrl'
       })
-      .when('/about', {
-        templateUrl: 'views/about.html',
-        controller: 'AboutCtrl'
-      })
       .otherwise({
         redirectTo: '/'
       });
+  }).value('googleChartApiConfig', {
+    version: '1.1',
+    optionalSettings: {
+      packages: ['line', 'bar'],
+      language: 'en'
+    }
   });
