@@ -8,17 +8,55 @@
  * Controller of the gardenTempApp
  */
 angular.module('gardenTempApp')
-  .controller('MainCtrl', ['$scope', '$http', function ($scope, $http) {
+  .controller('MainCtrl', ['$scope', '$http', 'googleChartApiPromise', '$timeout', function ($scope, $http, googleChartApiPromise, $timeout) {
 
-    var url = 'https://data.sparkfun.com/output/bGb7w7O557Ip18wAnXog.json';
+    // Defining all chart specific constants here
+    var url = 'https://data.sparkfun.com/output/bGb7w7O557Ip18wAnXog.json?limit=96';
+    var chartType = 'LineChart';
+    var googleChartOptions = {
+        'title': 'Garden Temperature',
+        'displayExactValues': true,
+        'vAxis': {
+            'title': 'Temperature',
+            "gridlines": {
+              "count": 10
+            }
+        },
+        'hAxis': {
+            'title': 'Date Time'
+        },
+        curveType: 'function',
+        legend: { position: 'bottom' },
+        animation: {startup: true, duration: 5},
+        explorer: {},
+        width: 700,
+        height: 400
+    };
 
-    $http.get(url).
-      success(function(data, status, headers, config) {
-        console.log(data, status, headers, config);
 
-        $scope.chartObject = {};
+    // Do stuff! Query the data.sparkfun.com Phant API
+    function generateChart(){
+      $http.get(url).
+        success(function(data, status, headers, config) {
 
-        $scope.chartObject.data = {
+          // We have the data - wait for the Google Charts Library
+          googleChartApiPromise.then(function(){
+            $scope.chartObject = {};
+            $scope.chartObject.data = parseData(data);
+            $scope.chartObject.type = chartType;
+            
+            $scope.chartObject.options = googleChartOptions;
+          });
+        }).
+        // Hmm, something went wrong with the Sparkfun Phant API
+        error(function(data, status, headers, config) {
+          console.log('problemo!');
+        });
+      }
+      
+      function parseData(data){
+
+        var chartData = {
           'cols': [
             {id: 't', label: 'Time', type: 'datetime'},
             {id: 's', label: 'Temperature', type: 'number'}
@@ -31,30 +69,12 @@ angular.module('gardenTempApp')
             {'v': new Date(data[ii].timestamp)},
             {'v': data[ii].temp}
           ];
-
-          $scope.chartObject.data['rows'].unshift({'c': record});
+          chartData.rows.unshift({'c': record});
         }
+        return chartData;
+      }
 
-        $scope.chartObject.type = 'google.charts.Line';
-        $scope.chartObject.options = {
-            'title': 'Garden Temperature',
-            'displayExactValues': true,
-            'vAxis': {
-                'title': 'Temperature'
-            },
-            'hAxis': {
-                'title': 'Date Time'
-            },
-            curveType: 'function',
-            // legend: { position: 'bottom' },
-            explorer: {},
-            width: 700,
-            height: 400
-        };
+      generateChart();
+      $timeout(generateChart, 900000) // 15 mins
 
-
-      }).
-      error(function(data, status, headers, config) {
-        console.log('problemo!');
-      });
   }]);
