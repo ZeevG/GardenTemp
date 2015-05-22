@@ -8,111 +8,96 @@
  * Controller of the gardenTempApp
  */
 angular.module('gardenTempApp')
-  .controller('MainCtrl', ['$scope', '$http', 'googleChartApiPromise', '$timeout', function ($scope, $http, googleChartApiPromise, $timeout) {
+  .controller('MainCtrl', ['$scope', '$http', 'googleChartApiPromise', '$interval', function ($scope, $http, googleChartApiPromise, $interval) {
 
     // Defining all chart specific constants here
-    var url = 'https://data.sparkfun.com/output/bGb7w7O557Ip18wAnXog.json?limit=10080';
+    var url = 'https://data.sparkfun.com/output/bGb7w7O557Ip18wAnXog.json?limit=5040';
     var chartType = 'LineChart';
-    var googleChartOptions = {
-        'title': 'Garden Temperature',
-        'displayExactValues': true,
-        'vAxis': [{
-          'title': 'Humidity',
-          'gridlines': {
-            'count': 10
-          },
-          'maxValue': 100,
-        },{
-            'title': 'Temperature',
-            'gridlines': {
-              'count': 10
-            }
-        }],
-        'hAxis': {
-            'title': 'Date Time'
-        },
-        series:{
-           0:{targetAxisIndex:1},
-           1:{targetAxisIndex:0, 'color': '#808080', lineWidth: 1}
-        },
+    var options = {
+                  chart: {
+                    type: 'multiChart',
+                    height: 600,
+                    margin : {
+                        top: 80,
+                        right: 80,
+                        bottom: 80,
+                        left: 80
+                    },
+                    color: [
+                      "#ff7f0e",
+                      "#99ccff"
+                    ],
+                    x : function(d) {
+                        return d.x;
+                        },
+                    y : function(d) {
+                          return d.y;
+                    },
+                    interpolate: 'basis',
+                    useInteractiveGuideline: true,
+                    xAxis: {
+                      axisLabel: 'X Axis',
+                      showMaxMin: false,
+                      staggerLabels: false,
+                      tickFormat: function(d){
+                        return d3.time.format('%I%p %a')(new Date(d));
+                      }
+                    },
+                    yAxis1: {
+                        axisLabel: 'Humidity',
+                        tickFormat: function(d){
+                            return d3.format(',.2f')(d) + "%";
+                        },
+                        tickPadding: 20,
+                        rotateYLabel: false,
+                        showMaxMin: false,
+                    },
+                    yAxis2: {
+                        axisLabel: 'Temperature',
+                        tickFormat: function(d){
+                            return d3.format(',.2f')(d) + "C";
+                        },
+                        rotateYLabel: false,
+                        showMaxMin: false,
+                    }
+                  }
+                  };
 
-        legend: { position: 'bottom' },
-        animation: {startup: true, duration: 5},
-        explorer: {},
-        width: 700,
-        height: 400
-    };
-
+    $scope.options = options;
 
     // Do stuff! Query the data.sparkfun.com Phant API
     function generateChart(){
-      $http.get(url).
-        success(function(data, status, headers, config) {
+      $http.get(url)
+      .success(function(data, status, headers, config) {
+        $scope.data = [{
+                  key: 'Temperature',
+                  values: [],
+                  type: 'line',
+                  yAxis: 2
+              },
+              {
+                  key: 'Humidity',
+                  values: [],
+                  type: 'line',
+                  yAxis: 1
+              }];
 
-          // We have the data - wait for the Google Charts Library
-          googleChartApiPromise.then(function(){
-            $scope.chartObject = {};
-            $scope.chartObject.data = parseData(data);
-            $scope.chartObject.type = chartType;
-            
-            $scope.chartObject.options = googleChartOptions;
-          });
-        }).
-        // Hmm, something went wrong with the Sparkfun Phant API
-        error(function(data, status, headers, config) {
-          console.log('problemo!');
-        });
-      }
-
-      function movingAverage(data, index, window){
-        var start = index - Number(window/2);
-        if(start < 0){
-          start = 0;
+        for(var ii = 0; ii<data.length; ii++){
+          if(ii%40 == 0){
+            var value = data[ii];
+            $scope.data[0].values.push({y: value.temp, x: new Date(value.timestamp).valueOf()});
+            $scope.data[1].values.push({y: value.humidity, x: new Date(value.timestamp).valueOf()});
+          }
         }
+      })
+      // Hmm, something went wrong with the Sparkfun Phant API
+      .error(function(data, status, headers, config) {
+        console.log('problemo!');
+      });
+    }
 
-        var end = index + Number(window/2);
-        if(end >= data.length){
-          end = data.length - 1;
-        }
+    generateChart();
+    $interval(generateChart, 120000); // 2 mins
 
-        var temp = 0;
-        var humidity = 0;
-        var range = end - start;
-        for(var ii = 0; ii < range; ii++){
-          temp = temp + Number(data[start + ii].temp);
-          humidity = humidity + Number(data[start + ii].humidity);
-        }
-
-        return {'temp':(temp/range), 'humidity':(humidity/range)};
-
-      }
-      
-      function parseData(data){
-
-        var chartData = {
-          'cols': [
-            {id: 't', label: 'Time', type: 'datetime'},
-            {id: 's', label: 'Temperature', type: 'number'},
-            {id: 'h', label: 'Humidity', type: 'number'}
-          ],
-          'rows': [],
-        };
-
-        for(var ii = 0; ii < data.length; ii++){
-
-          var averagedPoint = movingAverage(data, ii, 30)
-          var record = [
-            {'v': new Date(data[ii].timestamp)},
-            {'v': Number(averagedPoint.temp).toFixed(2)},
-            {'v': Number(averagedPoint.humidity).toFixed(2)}
-          ];
-          chartData.rows.unshift({'c': record});
-          ii = ii + 10;
-        }
-        return chartData;
-      }
-
-      generateChart();
-      $timeout(generateChart, 120000); // 2 mins
 
   }]);

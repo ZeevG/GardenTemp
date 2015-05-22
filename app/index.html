@@ -8,26 +8,38 @@
     <!-- Place favicon.ico and apple-touch-icon.png in the root directory -->
     <!-- build:css(.) styles/vendor.css -->
     <!-- bower:css -->
+    <link rel="stylesheet" href="bower_components/nvd3/build/nv.d3.css" />
     <!-- endbower -->
     <!-- endbuild -->
     <!-- build:css(.tmp) styles/main.css -->
     <link rel="stylesheet" href="styles/main.css">
     <!-- endbuild -->
+    <style>
+    .nvd3 .nv-axis line {
+      fill: none !important;
+      stroke: #e5e5e5 !important;
+      shape-rendering: crispEdges !important;
+    }
+
+    .title {
+      margin: 10px 0 10px 80px;
+    }
+
+    .temp {
+      color: #ff7f0e;
+    }
+
+    </style>
   </head>
-  <body ng-app="gardenTempApp">
+  <body ng-app="gardenTempApp" class="with-3d-shadow with-transitions">
     <!--[if lt IE 7]>
       <p class="browsehappy">You are using an <strong>outdated</strong> browser. Please <a href="http://browsehappy.com/">upgrade your browser</a> to improve your experience.</p>
     <![endif]-->
 
     <!-- Add your site or application content here -->
-    <div class="container">
-      <div class="header">
-        <h3 class="text-muted">Garden Temp</h3>
-      </div>
 
-      <div ng-view=""></div>
+    <div ng-view=""></div>
 
-    </div>
 
 
     <!-- Google Analytics: change UA-XXXXX-X to be your site's ID -->
@@ -60,6 +72,9 @@
     <script src="bower_components/angular-sanitize/angular-sanitize.js"></script>
     <script src="bower_components/angular-touch/angular-touch.js"></script>
     <script src="bower_components/angular-google-chart/ng-google-chart.js"></script>
+    <script src="bower_components/d3/d3.js"></script>
+    <script src="bower_components/nvd3/build/nv.d3.js"></script>
+    <script src="bower_components/angular-nvd3/dist/angular-nvd3.min.js"></script>
     <!-- endbower -->
     <!-- endbuild -->
 
