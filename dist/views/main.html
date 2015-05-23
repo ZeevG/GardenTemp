@@ -1,1 +1,6 @@
-<h2 class="text-muted title">Garden Temp, <span class="temp">{{data[0].values[0].y}}</span> &deg;C</h2> <br> <nvd3 options="options" data="data"> </nvd3>
+<h2 class="text-muted title">Garden Temp</h2>
+<h2 class="text-muted title"><span class="temp">{{data[0].values[0].y}}</span> &deg;C @ {{data[0].values[0].x | date:'shortTime'}}</h2>
+<br>
+<nvd3 options="options" data="data">
+    
+</nvd3>
